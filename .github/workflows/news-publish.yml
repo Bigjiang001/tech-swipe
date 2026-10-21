@@ -1,0 +1,36 @@
+name: Publish daily batch and process GPT submissions
+on:
+  schedule:
+    # Dense retries around Tokyo / Shanghai 08:00; hourly queue processing otherwise.
+    - cron: '0,5,10,20,35,50 23,0 * * *'
+    - cron: '17 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: techswipe-publish
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: vars.NEWS_AUTOMATION_ENABLED == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEWS_API_URL: ${{ secrets.NEWS_API_URL }}
+      NEWS_AUTOMATION_TOKEN: ${{ secrets.NEWS_AUTOMATION_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Drain durable submissions
+        id: worker
+        continue-on-error: true
+        run: python -m agent.pipeline worker
+      - name: Publish verified batch if due
+        # Publish already-verified content even when a different submission fails.
+        if: always()
+        run: python -m agent.pipeline publish
+      - name: Propagate queue failure
+        if: steps.worker.outcome == 'failure'
+        run: exit 1

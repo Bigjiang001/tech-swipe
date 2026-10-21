@@ -1,0 +1,26 @@
+project_id = "tech-swipe"
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+[db]
+port = 54322
+major_version = 15
+[auth]
+enabled = true
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://127.0.0.1:5173"]
+enable_signup = false
+[auth.email]
+enable_signup = false
+[functions.news-ingest]
+verify_jwt = false
+[functions.news-publish-daily]
+verify_jwt = false
+[functions.news-job-status]
+verify_jwt = false
+[functions.admin-control]
+verify_jwt = false
+[functions.news-worker]
+verify_jwt = false

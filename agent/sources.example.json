@@ -1,0 +1,6 @@
+[
+ {"name":"GitHub · LLM 开源项目观察","url":"https://api.github.com/search/repositories","category":"科技","license_note":"GitHub 官方 REST API；仅公开仓库元数据，遵守 API 条款和速率限制","official":true,"source_type":"api","api_adapter":"github","content_hosts":["github.com"],"image_policy":"illustration"},
+ {"name":"Hugging Face · 热门模型观察","url":"https://huggingface.co/api/models","category":"AI","license_note":"Hugging Face 官方 Hub API；仅公开模型元数据，不下载权重、不推定商用许可","official":true,"source_type":"api","api_adapter":"huggingface","content_hosts":["huggingface.co"],"image_policy":"illustration"},
+ {"name":"OpenAI 官方动态","url":"https://openai.com/news/rss.xml","category":"AI","license_note":"启用前确认当前 RSS 使用条款；仅生成原创摘要，不复制全文或新闻图片","official":true,"source_type":"rss","focus":"model_update","content_hosts":["openai.com"],"image_policy":"illustration"},
+ {"name":"Claude Code 官方版本说明","url":"https://github.com/anthropics/claude-code/releases.atom","category":"AI","license_note":"GitHub 官方发布 Atom；仅原创摘要与来源链接","official":true,"source_type":"rss","focus":"model_update","content_hosts":["github.com"],"image_policy":"illustration"}
+]

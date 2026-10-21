@@ -1,0 +1,6 @@
+<script setup lang="ts">
+import { Compass, House, Bookmark, Plus, UserRound, Search, Settings2, ArrowUpRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Heart, MessageCircle, Share2, X, Check, ChevronRight, ChevronDown, ExternalLink, LogOut, LockKeyhole, ShieldCheck, Clock3, Zap, Layers3, Flame, SlidersHorizontal, CheckCheck, CircleHelp, Pencil, Trash2, Pin, RefreshCw, Play, Pause, Rss, KeyRound, FileText, Activity, Ellipsis, Copy, Upload, Command, Sparkles, LoaderCircle, Menu, Eye, Globe, CircleCheck, Send, ImagePlus, Bell, Terminal, NotebookPen } from 'lucide-vue-next'
+const icons:Record<string,any>={Compass,House,Bookmark,Plus,UserRound,Search,Settings2,ArrowUpRight,ArrowUp,ArrowDown,ArrowLeft,ArrowRight,Heart,MessageCircle,Share2,X,Check,ChevronRight,ChevronDown,ExternalLink,LogOut,LockKeyhole,ShieldCheck,Clock3,Zap,Layers3,Flame,SlidersHorizontal,CheckCheck,CircleHelp,Pencil,Trash2,Pin,RefreshCw,Play,Pause,Rss,KeyRound,FileText,Activity,Ellipsis,Copy,Upload,Command,Sparkles,LoaderCircle,Menu,Eye,Globe,CircleCheck,Send,ImagePlus,Bell,Terminal,NotebookPen}
+withDefaults(defineProps<{name:string;size?:number}>(),{size:20})
+</script>
+<template><component :is="icons[name]||icons.CircleHelp" :size="size" :stroke-width="1.7" aria-hidden="true"/></template>

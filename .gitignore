@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+!.env.agent.example
+.DS_Store
+__pycache__/
+.venv/
+playwright-report/
+test-results/
+.supabase/
+agent/output/
+*.local
+
+*.tsbuildinfo

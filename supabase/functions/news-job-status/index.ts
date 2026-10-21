@@ -1,0 +1,4 @@
+import { db,handler,clientAuth,checked,ApiError } from '../_shared/http.ts'
+Deno.serve(handler('GET',async(req,raw)=>{const c=await clientAuth(req,raw,'status');const id=new URL(req.url).searchParams.get('job_id');if(!id){if(!c.scopes.includes('worker'))throw new ApiError(400,'job_id_required');const {data}=checked(await db.from('settings').select('value').eq('key','publishing').single());const jobs=checked(await db.from('agent_jobs').select('id,kind,status,created_at').eq('kind','prepare').eq('status','pending').limit(10)).data;return {settings:data!.value,manual_jobs:jobs}}
+ const {data,error}=await db.from('agent_jobs').select('id,kind,status,result,error,created_at,updated_at').eq('id',id).eq('client_id',c.id).single();if(error||!data)throw new ApiError(404,'job_not_found');return data
+}))
