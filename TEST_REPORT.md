@@ -77,3 +77,5 @@
 - 安全顾问：新增私有 OAuth 表启用 RLS 且无前端策略是有意拒绝访问，相关 RPC 只授予 service_role；is_owner 的 authenticated SECURITY DEFINER 调用为身份判定所必需。现有 Auth 泄露密码保护未开启，需在控制台按实际套餐与配置评估，不代表本次已启用该功能。
 
 - 补充规范网址跳转验证：只跟随已批准域名内的 HTTPS 跳转，每一跳重新检查域名和地址，最多 4 跳；外域及私网跳转拒绝。元信息缺日期或简介时保留已知 RSS 日期与摘要。Deno API/worker 最终 23 项通过。
+
+- 收下已采集 URL 会保留原文资料并转入投稿者收件箱；官网拒绝抓取时仅回退到已批准来源的原始 RSS。新增 handler 场景测试后，Deno API/worker 最终 25 项通过。线上元信息队列回退测试返回 HTTP 200、stage=extracted，临时资料随后归档。

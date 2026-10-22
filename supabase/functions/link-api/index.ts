@@ -16,8 +16,13 @@ const schema=z.discriminatedUnion('action',[
 async function insertLink(row:Record<string,unknown>){
  const result=checked(await db.from('link_items').upsert(row,{onConflict:'owner_id,canonical_url',ignoreDuplicates:true}).select('id,stage'))
  if(result.data?.length)return {...result.data[0],duplicate:false}
- const found=checked(await db.from('link_items').select('id,stage').eq('owner_id',row.owner_id).eq('canonical_url',row.canonical_url).single()).data!
- return {...found,duplicate:true}
+ const found=checked(await db.from('link_items').select('id,stage,origin,client_id,title,reason,tags,excerpt').eq('owner_id',row.owner_id).eq('canonical_url',row.canonical_url).single()).data!
+ if(row.origin!=='collector'&&(row.origin==='owner'||found.origin==='collector')){
+  const stage=found.stage==='archived'?(found.excerpt?'extracted':'saved'):found.stage
+  checked(await db.from('link_items').update({origin:row.origin,client_id:row.client_id||null,title:row.title||found.title,reason:row.reason||found.reason,tags:[...new Set([...(found.tags||[]),...((row.tags as string[])||[])])].slice(0,10),stage,updated_at:new Date().toISOString()}).eq('id',found.id))
+  return {id:found.id,stage,duplicate:true}
+ }
+ return {id:found.id,stage:found.stage,duplicate:true}
 }
 Deno.serve(handler('POST',async(req,raw)=>{
  const parsed=schema.safeParse(jsonBody(raw));if(!parsed.success)throw new ApiError(422,'validation_failed');const body=parsed.data
@@ -68,8 +73,13 @@ Deno.serve(handler('POST',async(req,raw)=>{
  const source=sources.find(s=>[new URL(s.url).hostname,...(s.content_hosts||[])].includes(host))
  if(!source){checked(await db.from('link_items').update({stage:'needs_source',processing_until:null,error_code:'source_not_enabled',updated_at:new Date().toISOString()}).eq('id',row.id).eq('stage','processing'));return {ok:false,error:'source_not_enabled'}}
  try{
-  const page=await safeFetch(row.canonical_url,[host],750000);if(!page.contentType.includes('text/html'))throw new ApiError(422,'html_page_required')
-  const metadata=htmlMetadata(page.body);if(!metadata.title)throw new ApiError(422,'page_metadata_missing')
+  let metadata:ReturnType<typeof htmlMetadata>
+  try{const page=await safeFetch(row.canonical_url,[host],750000);if(!page.contentType.includes('text/html'))throw new ApiError(422,'html_page_required');metadata=htmlMetadata(page.body);if(!metadata.title)throw new ApiError(422,'page_metadata_missing')}
+  catch(pageError){
+   if(source.source_type!=='rss')throw pageError
+   const feed=await safeFetch(source.url,[new URL(source.url).hostname],1200000);const target=new URL(row.canonical_url);target.searchParams.delete('ref');const matched=feedLinks(feed.body,source).find((i:any)=>i.canonical_url===canonicalLink(target.toString()));if(!matched)throw pageError
+   metadata={title:matched.title,excerpt:matched.excerpt,source_published_at:matched.source_published_at,metadata:{candidate_image:'',extraction:'rss_fallback',limitations:'页面不可访问，采用原始 RSS 简介；未生成中文解读，未独立核验'}}
+  }
   checked(await db.from('link_items').update({...metadata,source_published_at:metadata.source_published_at||row.source_published_at,excerpt:metadata.excerpt||row.excerpt,title:row.title||metadata.title,metadata:{...metadata.metadata,original_title:metadata.title},source_id:source.id,source_name:source.name,stage:row.post_id?'drafted':'extracted',processing_until:null,error_code:null,updated_at:new Date().toISOString()}).eq('id',row.id).eq('stage','processing'))
   return {ok:true,stage:'extracted',message:'已提取网页元信息；未生成中文解读，候选图片未导入'}
  }catch(e){const code=e instanceof ApiError?e.code:'metadata_fetch_failed';checked(await db.from('link_items').update({stage:'failed',processing_until:null,error_code:code,updated_at:new Date().toISOString()}).eq('id',row.id).eq('stage','processing'));return {ok:false,error:code}}
