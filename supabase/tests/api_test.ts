@@ -34,3 +34,5 @@ Deno.test('changed payload under same batch key conflicts',async()=>{const body=
 Deno.test('unknown published flag / unsafe URL fail strict schema',async()=>{for(const altered of [{...post,published:true},{...post,source_url:'javascript:alert(1)'}]){const r=await handle!(await signed({idempotency_key:'test-invalid',posts:[altered]}));expect(r.status,422)}})
 Deno.test('old signature is rejected before accepting a submission',async()=>{expect((await handle!(await signed({},{timestamp:'1234567890'}))).status,401)})
 Deno.test('anonymous request is rejected',async()=>{expect((await handle!(new Request('https://app.example.test/functions/v1/news-ingest',{method:'POST',body:'{}'}))).status,401)})
+
+Deno.test('hosted gateway stripped path verifies the public URL signature',async()=>{const original=await signed({idempotency_key:'test-hosted-gateway',posts:[post]});const forwarded=new Request('https://runtime.example.test/news-ingest',{method:original.method,headers:original.headers,body:await original.text()});const response=await handle!(forwarded);expect(response.status,202)})
