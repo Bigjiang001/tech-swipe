@@ -43,3 +43,15 @@
 7. 发布前保持 auto_publish=false，人工核对首批；再设置 Asia/Tokyo / Shanghai 的 08:00，确认计划和实际时间。并发触发 Actions / 可选 Cron，publishing_batches 同日只有一条。
 8. 模拟模型失败、来源缺失及图片下载失败：任务有错误日志、后续好内容仍可处理、无授权图片使用标注示意图。
 9. Pages 生产 URL 真机测试滑动、键盘/滚轮、浏览器返回、详情刷新、弱网、会话过期、剪贴板和主屏幕模式。
+
+
+## 云端部署复验（2026-10-22，北京时间）
+
+- GitHub Pages 已启用并返回正式静态入口；GitHub Actions 类型检查、单元/API/Agent/浏览器测试和构建通过。
+- Supabase 已部署数据库迁移和 5 个 Edge Functions；19 张业务表均启用 RLS。
+- 无会话直接读取 posts 返回 401/权限拒绝；公开 Storage 路径不可读取私有桶。无凭证投稿、状态、发布和管理请求返回 401。
+- 托管环境默认函数权限额外向 anon 授权的问题已用追加迁移撤销，并复查为 false。
+- 数据库角色测试：owner 可见自己的 profile；非 owner 的 authenticated 身份看不到 profiles 或来源。
+- 生产前端已由所有者亲自设置密码并完成实际登录。
+- Auth 已关闭公开注册和匿名登录；Site URL 与函数 CORS 已指向正式域名。
+- 尚未配置模型 API 密钥及自动化凭证，自动制稿/自动发布保持关闭；不可声称每日更新已启用。

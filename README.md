@@ -43,7 +43,7 @@ GPT_INTEGRATION.md         外部 Agent 与 ChatGPT 定时任务接入
 
 1. 创建你自己的 Supabase 项目。Auth 设置中关闭 **Allow new users to sign up**，关闭匿名登录；只保留需要的 Email Provider。不要在网站开放注册。
 2. 在 Auth → Users 中创建一个所有者用户（或邀请后设置密码）。邮箱、密码由你在 Supabase 安全界面输入，不写进仓库。本站使用邮箱 + 密码登录，不实现公开注册或用前端管理员口令。
-3. 将 `supabase/migrations/` 的三个 SQL 文件按文件名顺序在 SQL Editor 执行；或使用 CLI：
+3. 将 `supabase/migrations/` 的全部 SQL 文件按文件名顺序在 SQL Editor 执行；或使用 CLI：
 
    ```bash
    npx supabase login
@@ -165,7 +165,7 @@ npm run build
 node scripts/check-build.mjs
 ```
 
-本次没有连接你的 GitHub 仓库或 Supabase 项目，因此没有执行云端部署，也没有把演示内容当成真实报道上线。
+当前实例已部署至 https://bigjiang001.github.io/tech-swipe/ ，并连接独立 Supabase 私人后端。所有者已在控制台自行创建并绑定；公开注册已关闭。自动制稿仍须配置模型服务与自动化凭证，当前保持关闭。首次导入的资讯正文只保存在受 RLS 保护的数据库，不进入仓库或 Pages 产物。
 
 ## 8. 测试与运行边界
 
