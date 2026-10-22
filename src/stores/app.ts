@@ -45,7 +45,7 @@ export const useApp = defineStore('app', () => {
   if(!supabase||!owner.value)return
   loading.value=true
   try {
-   const results=await Promise.all([supabase.from('posts').select('*').order('published_at',{ascending:false}),supabase.from('likes').select('post_id'),supabase.from('bookmarks').select('post_id'),supabase.from('comments').select('*').order('created_at'),supabase.from('follows').select('kind,value'),supabase.from('reading_history').select('post_id'),supabase.from('settings').select('value').eq('key','publishing').single()])
+   const results=await Promise.all([supabase.from('posts').select('*,related_sources:post_sources(name,url)').order('published_at',{ascending:false}),supabase.from('likes').select('post_id'),supabase.from('bookmarks').select('post_id'),supabase.from('comments').select('*').order('created_at'),supabase.from('follows').select('kind,value'),supabase.from('reading_history').select('post_id'),supabase.from('settings').select('value').eq('key','publishing').single()])
    results.forEach(check)
    posts.value=results[0]!.data as unknown as Post[];likes.value=(results[1]!.data||[]).map((r:any)=>r.post_id);bookmarks.value=(results[2]!.data||[]).map((r:any)=>r.post_id);notes.value=results[3]!.data as unknown as Note[];follows.value=results[4]!.data as unknown as Follow[];read.value=(results[5]!.data||[]).map((r:any)=>r.post_id);settings.value=results[6]!.data?.value as Settings
   } finally {loading.value=false}

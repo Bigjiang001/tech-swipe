@@ -1,0 +1,60 @@
+# 链接优先 · 科技刷 V0.02
+
+## 手机使用
+
+- 首页「快讯」：查看官方 RSS、GitHub、Hugging Face 的原文线索。它不是已核验新闻流；保留原文语言，项目指标有独立采集时间。
+- 发现页「链接收件箱」：粘贴 HTTPS 原文网址，附上收下理由。相同规范化 URL 不会重复添加。
+- 已启用来源会提取网页标题、简介和可确定的原文日期；没有日期不会补造。未启用的域名保留链接，提示先在后台添加来源。
+- 状态包括待提取、正在提取、待整理、需要来源、失败、已关联文章和归档。来源恢复后可以重试。
+- 点「整理成手记」进入编辑器。只带入标题、来源与标签；摘要和正文由所有者填写，不能把英文原文简介冒充中文 AI 解读。
+- 发布时可追加最多 5 张正文图片。每张都要填写署名和许可；AI 示意图单独标记。GPT 附件须所有者确认使用权后才带入文章。
+- 详情「听这条」使用设备系统语音；发现页「听今日精选」提供今天的文章播放列表、倍速和逐条选择。暂停后从当前段恢复。系统朗读不保证手机锁屏连续播放。
+
+## 不依赖模型密钥的定时采集
+
+主执行环境是 Supabase Cron + Edge Functions，不需要电脑或浏览器保持打开：
+
+1. `techswipe-link-collector`：每小时 UTC 第 20 分钟调用 `link-api collect`，依次处理最多 3 个最久未采集的启用来源，每源最多 15 条。
+2. `techswipe-link-metadata`：每 2 分钟处理一个待提取链接。队列为空不发送 HTTP；数据库 lease 避免并发提取同一项。
+3. `techswipe-submission-worker`：每 2 分钟处理一条持久化新闻投稿，空队列不调用。缺少独立核验模型时只能成为草稿，不能自动发布。
+
+这些定时任务可有延迟。每轮有 collection_runs 状态、实际运行时间、增量数量与安全错误码。每小时同一 slot 成功后不重复采集，失败可重试；一个失败来源不会阻止其他来源入库。旧项目只刷新观察指标，不伪装为新发布。
+
+`settings.discovery.enabled` 可在快讯页暂停/恢复采集与自动元信息提取。后台创建的采集凭证只有 collect 范围，新闻队列处理凭证只有 worker 范围，均在 Vault 中生成、保存并在到期前自动轮换，原文不会出现在前端或日志。
+
+迁移到自己的项目时：
+
+- 先执行全部 `supabase/migrations/*.sql`，部署函数。
+- 在 Vault 配置 `techswipe_api_url`，值为自己项目的 `/functions/v1` URL（不是敏感密钥）。
+- 执行 `supabase/optional/link-cron.sql` 和 `submission-cron.sql`。检查 cron.job 和 net._http_response 的安全结果，不要查询或输出请求 headers。
+- 可选 GitHub 备用工作流 `link-collect.yml` 使用独立 collect 凭证 `NEWS_COLLECTOR_TOKEN`；设置 `LINK_COLLECTION_BACKUP_ENABLED=true` 才启用计划调度。主 Cron 不依赖这些 GitHub Secrets。
+
+## GPT 连接器
+
+已实现 Streamable HTTP MCP 与 OAuth 2.1 授权码 + S256 PKCE。MCP URL：
+
+`https://wdtziusllexbanevxknz.supabase.co/functions/v1/gpt-bridge`
+
+在支持自定义 MCP 应用的 ChatGPT 账号中添加这个 URL，选择 OAuth。不要向提示词粘贴密钥。连接会跳转到科技刷 `/connect`：所有者登录后核对回调地址及权限，点击同意才产生一次性授权码。当前仅接受 `https://chatgpt.com/connector/oauth/...` 的回调，其他客户端不得绕过白名单。
+
+- `submit_links`：每次 1–20 个真实资料链接，可附中文标题、理由和标签。
+- `get_link_status`：仅查询此连接提交的链接。
+- `upload_link_image`：给此连接提交的链接上传 JPG/PNG/WebP，单图最多 4MB、每链接最多 5 张。返回待所有者核对许可，不会发布。
+- `submit_news`：每批最多 10 条完整中文草稿，沿用现有严格 Schema、HMAC、幂等和独立核验。
+- `get_news_job_status`：仅查询此连接的投稿任务。
+
+连接不能读现有新闻、笔记、图片或设置，不能发布或删除。公开 initialize/tools/list 只包含工具说明；调用必须有有效授权。访问令牌 1 小时；刷新令牌 90 天、每次刷新轮换；刷新保持同一投稿身份，旧访问令牌立即失效。后台 GPT 接口中撤销对应凭证会同时阻止后续刷新。
+
+Supabase 函数位于路径前缀下，授权元数据另提供 OIDC discovery 路径作为 MCP SDK 的发现回退；这里仍只提供 OAuth 投稿授权，不提供 OpenID 登录或 ID Token。已用官方 MCP SDK 1.32.1 检查发现、初始化及工具列表；也运行了实际授权码交换、刷新、重复提交和私人图片上传。**尚未替用户在实际 ChatGPT 账号中添加连接，也未验证该账号的每日云端任务调用。** 先在普通聊天完成一次真实提交，再设置 07:20（Asia/Shanghai）研究、08:00 批量发布的安排。
+
+若账号没有自定义连接功能，可继续使用基础快讯；已实现的 HMAC API 也供其他受信任 Agent 使用，不能通过普通提示词绕过授权。
+
+## 多图与每日音频
+
+图片在私有 Storage 中，数据库只存路径和许可说明；临时签名 URL 5 分钟有效。公共 Pages 的分类 SVG 仅为原创通用示意图，不包含文章内容。
+
+`news-audio` 提供 `status`、`generate`、`url` 三种 owner-only 操作。模型服务未配置时显示未配置，仍可使用系统朗读。
+
+在 Edge Secrets 配置 `TTS_BASE_URL`、`TTS_API_KEY`、`TTS_MODEL`，可选 `TTS_VOICE`，使用兼容 `/audio/speech` 的服务。只有所有者点击生成才请求服务；未配置时不会购买或调用服务。播报只包含今天已核验的 Agent 文章标题与速读摘要，不生成额外事实、不模仿真实人物声音。相同文稿复用私人 MP3；每天最多 2 个不同版本，每个版本失败最多重试 3 次。文件最大 20MB，播放器支持倍速与私人数据库中的进度恢复。
+
+当前每日 MP3 是按需合成；没有宣称已启用自动语音合成。完整中文 AI 制稿、独立核验和正式 08:00 发布仍须配置原有模型服务并开启对应设置。`agent.pipeline` 已合并来源采集与收件箱候选；时间不明、旧资料及证据不足的条目不会强凑成稿。

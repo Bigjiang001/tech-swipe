@@ -24,3 +24,16 @@ verify_jwt = false
 verify_jwt = false
 [functions.news-worker]
 verify_jwt = false
+
+[functions.link-api]
+verify_jwt = false
+
+[functions.news-audio]
+verify_jwt = false
+
+[functions.gpt-auth]
+verify_jwt = false
+[functions.gpt-bridge]
+verify_jwt = false
+[functions.link-media]
+verify_jwt = false

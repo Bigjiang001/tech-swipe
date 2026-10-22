@@ -1,4 +1,4 @@
-# 科技刷 TECH SWIPE · V0.01
+# 科技刷 TECH SWIPE · V0.02
 
 手机优先的私人 AI 新闻阅读应用。每天一次集中发布；新闻数量可配，默认目标 20 条、范围 1–50 条。六个领域之外，重点提供 **GitHub 开源项目、Hugging Face 热门模型、大模型能力升级**的 AI 雷达。
 
@@ -186,3 +186,10 @@ Mac 如已安装 Chrome，测试自动使用 Chrome；其他环境安装 Playwri
 当前网页 API 适配器包括 RSS、NewsAPI、GitHub、HF；其他授权新闻供应商通过新增 Python adapter 接入。HTML 无法抓取、官方页面被反爬或日期无法核实的内容会失败或待审核。模型核验是带来源证据的自动辅助，不是绝对事实保证；特别重要或争议内容优先人工审核。
 
 迁移至独立服务器时可保留静态前端与 Hash Router，将 Python 放入 cron/worker，继续调用同一 API；也可迁移 PostgreSQL 和 S3 存储。没有 Pages 端服务端代码。
+
+
+## 链接优先与多媒体升级
+
+手机首页「快讯」和发现页「链接收件箱」提供官方原文线索，Supabase Cron 每小时采集，链接元信息每 2 分钟处理一次，均不需要模型 API。中文深度制稿和自动正式发布仍需配置模型。
+
+新增 OAuth/PKCE 的 GPT 投稿连接器、私有图片附件和多图阅读、系统朗读及按需每日 MP3 服务。完整使用、权限、定时器与配置说明见 [LINK_FIRST.md](LINK_FIRST.md)。GPT 连接 URL 可在已支持自定义 MCP 的 ChatGPT 账号中授权；部署不等于已替用户完成连接或创建定时任务。

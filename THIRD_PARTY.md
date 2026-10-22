@@ -34,3 +34,6 @@
 - https://learn.chatgpt.com/docs/automations
 
 外部新闻源、图片与模型权重的许可独立于本项目代码，不能由上述依赖的开源许可推导。
+
+- fast-xml-parser 5.11.2（MIT）：仅在服务端解析 RSS / Atom，禁用外部实体及 DOCTYPE。
+- MCP 按公开 Streamable HTTP / OAuth 协议实现，互操作验证使用官方 @modelcontextprotocol/sdk 1.32.1（MIT），该验证工具未打入前端。

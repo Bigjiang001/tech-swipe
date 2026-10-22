@@ -97,3 +97,16 @@ external_id、idempotency_key、content_kind、title、category、short_summary�
 - 云端任务的工具可用性与权限依赖实际账号、工作区和连接；本地文件型任务不能被假定为电脑关闭后仍可运行。
 
 官方能力说明：https://learn.chatgpt.com/docs/automations 、https://learn.chatgpt.com/docs/enterprise/chatgpt-work-cloud-security
+
+
+## V0.02：链接优先任务模板（先授权科技刷连接器）
+
+每天北京时间 07:20（Asia/Shanghai），为我的私人科技刷收集值得关注的科技资料。重点关注官方模型升级、GitHub 高关注项目和 Hugging Face 热门模型，兼顾其他重要科技资讯。优先最近 24 小时，必要时 48 小时；项目观察标注采集时间，不把旧项目或模型当成今日发布。
+
+使用已授权的科技刷 submit_links 工具，将原始 HTTPS 地址、中文标题、入选理由和主题标签提交到私人收件箱，每次最多 20 条。合并同一事件，保持稳定原文链接；不要把凭证或敏感查询参数写入链接。查询 get_link_status 并报告真实返回的 id、重复数量与实际状态。资料会由后端按启用的来源范围提取，不直接发布。
+
+有权使用的图片可用 upload_link_image 附加在自己提交的链接下，明确署名和许可；AI 示意图必须标记。没有许可就只传原文网址，不复制新闻图片。不要自行生成音频事实稿，播报沿用已审核文章摘要。
+
+如果准备好了符合严格 Schema 的中文原创解读，可使用 submit_news 提交草稿，每批最多 10 条，verification_status 必须 pending，幂等键稳定。查询 get_news_job_status；上传成功不等于核验或发布成功。没有工具或授权失效时明确说明尚未上传，不虚构回执，不索取聊天中的密钥。
+
+任务结束只报告新增、重复、失败和未完成原因。正式 08:00 发布由科技刷后台控制；素材不足少发，不凑数。先在普通聊天验证一次完整上传，再启用此定时任务。

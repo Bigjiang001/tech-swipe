@@ -20,7 +20,7 @@ const date=new Intl.DateTimeFormat('zh-CN',{month:'long',day:'numeric',weekday:'
    <div class="sidebar-label">你的每日信息宇宙</div>
    <nav class="side-nav"><RouterLink v-for="n in nav" :key="n.to" :to="n.to" :class="{active:route.path===n.to||(n.to==='/'&&route.path.startsWith('/post/'))}"><Icon :name="n.icon"/><span>{{n.label}}</span><span v-if="n.to==='/'" class="nav-dot"></span><small v-if="n.to==='/bookmarks'&&app.bookmarks.length">{{app.bookmarks.length}}</small></RouterLink></nav>
    <RouterLink to="/publish" class="publish-side"><Icon name="Plus" :size="18"/>记录一个发现</RouterLink>
-   <div class="sidebar-divider"></div>
+   <RouterLink to="/inbox" class="admin-link"><Icon name="Rss"/>链接收件箱</RouterLink><div class="sidebar-divider"></div>
    <div class="sidebar-label">工作台</div>
    <RouterLink to="/admin" class="admin-link" :class="{active:route.path==='/admin'}"><Icon name="SlidersHorizontal"/>新闻管理<Icon name="ArrowUpRight" :size="16"/></RouterLink>
    <div class="side-bottom">

@@ -1,5 +1,14 @@
 # GPT / 外部 AI Agent 接入科技刷
 
+V0.02 已实现链接优先的 MCP 投稿连接器，支持 OAuth + PKCE，无需将密钥写入任务提示词。当前实例 URL：
+
+`https://wdtziusllexbanevxknz.supabase.co/functions/v1/gpt-bridge`
+
+连接步骤、5 个工具、权限范围、图片上传、撤销和云端验证边界见 [LINK_FIRST.md](LINK_FIRST.md)。先在普通聊天授权并完成一次 submit_links 测试，再创建定时任务。服务端协议已测试；用户实际 ChatGPT 连接和定时运行仍待完成。
+
+以下保留完整新闻投稿 API 与受控桥接说明。
+
+
 本项目采用两个独立入口：受信任 Agent 投稿，以及 GitHub Actions 直接采集网站 / GitHub / Hugging Face 的无人值守流水线。两者进入相同持久队列、独立核验和发布事务。
 
 ## ChatGPT 定时任务的职责
@@ -12,7 +21,7 @@
 
 ## 安全接入的三种路径
 
-1. **已授权连接器 / MCP 工具**：工具在服务端保管仅投稿凭证，对 ChatGPT 暴露 `submit_news(batch)` 和 `get_submission(job_id)` 两个最小动作。连接器负责授权用户、签名、限流。不要暴露通用 URL fetch、service role、发布或删库动作。此仓库提供下游 API 与签名客户端；具体 ChatGPT 连接器需要在你的实际工作区注册和授权，未伪造一个已连接的工具。
+1. **已授权连接器 / MCP 工具**：工具在服务端保管仅投稿凭证，对 ChatGPT 暴露 `submit_news(batch)` 和 `get_submission(job_id)` 两个最小动作。连接器负责授权用户、签名、限流。不要暴露通用 URL fetch、service role、发布或删库动作。此仓库提供下游 API 与签名客户端；V0.02 已提供 gpt-bridge / gpt-auth，仍需在实际 ChatGPT 工作区添加并授权，不能伪造已连接状态。
 2. **受控桥接服务**：你自己的服务器验证 OAuth / 平台签名后，把 JSON 交给 `agent.api.API`。凭证在服务端 Secret Manager。桥接校验来源、请求大小和 JSON，不允许通过请求覆盖 API host 或注入密钥。不提供匿名上传网页。
 3. **GitHub 工作流**：ChatGPT 使用已授权 GitHub 工具提交经过检查的研究结果到受限的私人中转位置，或手动把 JSON 放入安全 runner 输入；受控 workflow 使用 GitHub Secrets 运行 `scripts/api-test.py` / `agent.api.API`。不要把个人研究内容提交到将被 Pages 打包的目录。若没有已验证的写入工具，ChatGPT 只输出研究材料，本项目现有 RSS / 平台 API 工作流继续独立运行。
 

@@ -216,6 +216,8 @@ def prepare(api,force=False,request_job=None):
         sources=api.request('news-worker',{'action':'sources'})['sources']
         if not sources:raise RuntimeError('No enabled news sources; refusing to fabricate news')
         raw=fetch_sources(sources,now)
+        inbox=api.request('news-worker',{'action':'inbox-candidates'}).get('items',[])
+        raw.extend(inbox)
         if not raw:raise RuntimeError('No usable fresh candidates')
         for offset in range(0,len(raw),20):
             api.request('news-worker',{'action':'record-candidates','items':[{k:x[k] for k in ('source_id','url','title','source_name','source_published_at','excerpt','category')} for x in raw[offset:offset+20]]})

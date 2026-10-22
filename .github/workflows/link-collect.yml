@@ -1,0 +1,24 @@
+name: Collect original source briefs (no model required)
+on:
+  schedule:
+    - cron: '20 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: link-collection
+  cancel-in-progress: false
+jobs:
+  collect:
+    if: vars.LINK_COLLECTION_BACKUP_ENABLED == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Call scoped source collector
+        env:
+          NEWS_API_URL: ${{ secrets.NEWS_API_URL }}
+          NEWS_AUTOMATION_TOKEN: ${{ secrets.NEWS_COLLECTOR_TOKEN }}
+        run: python -m agent.collect_links

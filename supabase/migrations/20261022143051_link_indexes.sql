@@ -1,0 +1,12 @@
+create index link_items_recent on public.link_items(observed_at desc);
+create index link_items_client on public.link_items(client_id);
+create index link_items_source on public.link_items(source_id);
+create index link_items_post on public.link_items(post_id);
+create index link_items_pending on public.link_items(created_at) where stage in('saved','processing');
+create index oauth_codes_client on private.oauth_codes(client_id);
+create index oauth_grants_client on private.oauth_grants(client_id);
+create index oauth_grants_access on private.oauth_grants(access_client_id);
+create index post_media_owner on public.post_media(owner_id);
+create index link_attachments_owner on public.link_attachments(owner_id);
+create index audio_briefs_owner on public.audio_briefs(owner_id);
+create index audio_progress_audio on public.audio_progress(audio_id);

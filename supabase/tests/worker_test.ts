@@ -24,7 +24,7 @@ globalThis.fetch=(async(input:RequestInfo|URL,init?:RequestInit)=>{const req=new
  else if(u.pathname==='/rest/v1/posts'&&req.method==='POST'){savedPost=value;data=null}
  else if(u.pathname==='/rest/v1/agent_jobs'&&req.method==='PATCH'){Object.assign(job,value);data=null}
  else if(u.pathname==='/rest/v1/agent_runs'){failedRuns++;data=null}
- else if(['/rest/v1/submission_logs','/rest/v1/media_assets','/rest/v1/post_sources'].includes(u.pathname))data=null
+ else if(['/rest/v1/submission_logs','/rest/v1/media_assets','/rest/v1/post_sources','/rest/v1/link_items'].includes(u.pathname))data=null
  else throw new Error('Unexpected fixture path: '+u.pathname)
  return Response.json(data)
 }) as typeof fetch
