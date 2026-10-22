@@ -1,0 +1,7 @@
+// Render only already-authorized text on the device; never publish private text as a static asset.
+export interface InfoImage {url:string;caption:string}
+const escapeXml=(s:string)=>s.replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]!))
+export function infoImages(title:string,points:string[],source:string):InfoImage[]{
+ const pages=[{label:'事件速览',text:title},{label:'值得关注',text:points.filter(Boolean).slice(0,3).join('。')||'暂无可提取摘要，请阅读原始出处。'},{label:'追溯来源',text:source||'来源尚未确定，请核对原文。'}]
+ return pages.map((p,i)=>{const chars=Array.from(p.text.replace(/\s+/g,' ').slice(0,220)),lines:string[]=[];while(chars.length&&lines.length<8)lines.push(chars.splice(0,18).join(''));const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 720 720"><rect width="720" height="720" fill="#191d23"/><circle cx="660" cy="80" r="200" fill="#283b43"/><path d="M48 125H672" stroke="#607580"/><text x="48" y="76" fill="#f5825e" font-family="sans-serif" font-size="22">TECH SWIPE · ${escapeXml(p.label)}</text>${lines.map((s,j)=>`<text x="48" y="${190+j*48}" font-family="sans-serif" font-size="32" fill="#f0eee8">${escapeXml(s)}</text>`).join('')}<text x="48" y="652" font-family="sans-serif" font-size="18" fill="#a1adb7">原创文字信息图 · 非新闻现场照片</text><text x="620" y="652" font-family="sans-serif" font-size="18" fill="#f5825e">0${i+1}</text></svg>`;return {url:'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg),caption:p.label+' · 原创文字信息图，非现场照片'}})
+}

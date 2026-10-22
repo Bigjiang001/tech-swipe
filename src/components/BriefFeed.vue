@@ -1,0 +1,27 @@
+<script setup lang="ts">
+import {computed,ref,onMounted,onUnmounted,watch} from 'vue'
+import {useLinks} from '../lib/links'
+import {useApp} from '../stores/app'
+import {dateLabel,secureUrl} from '../lib/format'
+import Icon from './Icon.vue'
+import InfoGallery from './InfoGallery.vue'
+import SpeechPlayer from './SpeechPlayer.vue'
+import LinkAttachments from './LinkAttachments.vue'
+const app=useApp(),box=useLinks(),index=ref(0),error=ref(''),busy=ref(false)
+const rows=computed(()=>box.items.value.filter(i=>i.origin==='collector'&&i.stage!=='archived')),current=computed(()=>rows.value[index.value])
+let timer:ReturnType<typeof setInterval>,startX=0,startY=0,startScroll=0,locked=0,wheelSum=0,wheelTimer:ReturnType<typeof setTimeout>
+async function refresh(){if(busy.value)return;busy.value=true;error.value='';const id=current.value?.id;try{await box.load();if(id){const found=rows.value.findIndex(i=>i.id===id);index.value=found<0?0:found}}catch(e){error.value=app.errorMessage(e)}finally{busy.value=false}}
+function move(d:number){if(Date.now()<locked)return;const next=index.value+d;if(next>=0&&next<rows.value.length){index.value=next;locked=Date.now()+650}}
+function key(e:KeyboardEvent){if(['INPUT','TEXTAREA','SELECT','BUTTON','A'].includes((e.target as HTMLElement)?.tagName))return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();move(e.key==='ArrowDown'?1:-1)}}
+function wheel(e:WheelEvent){if(e.ctrlKey)return;e.preventDefault();wheelSum+=e.deltaY;clearTimeout(wheelTimer);wheelTimer=setTimeout(()=>wheelSum=0,180);if(Math.abs(wheelSum)>65){move(wheelSum>0?1:-1);wheelSum=0}}
+function boundaryWheel(e:WheelEvent){const el=e.currentTarget as HTMLElement;if((e.deltaY<0&&el.scrollTop<=1)||(e.deltaY>0&&el.scrollTop+el.clientHeight>=el.scrollHeight-2))wheel(e)}
+function start(e:TouchEvent){startX=e.changedTouches[0]!.clientX;startY=e.changedTouches[0]!.clientY}
+function boundaryStart(e:TouchEvent){start(e);startScroll=(e.currentTarget as HTMLElement).scrollTop}
+function boundaryEnd(e:TouchEvent){const el=e.currentTarget as HTMLElement,dy=startY-e.changedTouches[0]!.clientY;if(dy<0&&startScroll<=1||dy>0&&startScroll+el.clientHeight>=el.scrollHeight-2)end(e)}
+function end(e:TouchEvent){const dy=startY-e.changedTouches[0]!.clientY,dx=startX-e.changedTouches[0]!.clientX;if(Math.abs(dy)>60&&Math.abs(dy)>Math.abs(dx)*1.3)move(dy>0?1:-1)}
+function visible(){if(document.visibilityState==='visible')void refresh()}
+watch(()=>rows.value.length,n=>{if(index.value>=n)index.value=0})
+onMounted(()=>{void refresh();timer=setInterval(visible,60000);document.addEventListener('visibilitychange',visible);document.addEventListener('keydown',key)})
+onUnmounted(()=>{clearInterval(timer);clearTimeout(wheelTimer);document.removeEventListener('visibilitychange',visible);document.removeEventListener('keydown',key)})
+</script>
+<template><section class="brief-stream" aria-label="自动快讯"><div class="brief-stream-status"><span><i></i>{{box.discovery.value.enabled?'每小时自动更新':'原文资料'}} · {{rows.length}} 条</span><button aria-label="刷新首页快讯" :disabled="busy" @click="refresh"><Icon name="RefreshCw" :size="16"/></button><RouterLink to="/inbox">GPT 投稿</RouterLink><RouterLink to="/inbox?tab=briefs">管理</RouterLink></div><p v-if="error" role="alert" class="form-error">{{error}} <button @click="refresh">重试</button></p><article v-if="current" :key="current.id" class="brief-story" @wheel="wheel" @touchstart="start" @touchend="end"><div class="brief-story-scroll" @wheel.stop="boundaryWheel" @touchstart.stop="boundaryStart" @touchend.stop="boundaryEnd"><div class="brief-story-byline"><span class="category-tag">{{current.category}}</span><small>{{index+1}} / {{rows.length}} · 原文快讯</small></div><h1>{{current.title}}</h1><p class="brief-stream-excerpt">{{current.excerpt||'原文尚未提供摘要，请打开来源了解详情。'}}</p><div class="brief-metrics"><span v-if="current.metadata?.metrics?.stars!=null">{{Number(current.metadata.metrics.stars).toLocaleString()}} 累计 stars</span><span v-if="current.metadata?.metrics?.downloads!=null">{{Number(current.metadata.metrics.downloads).toLocaleString()}} 平台窗口下载</span><span v-if="current.metadata?.metrics?.likes!=null">{{Number(current.metadata.metrics.likes).toLocaleString()}} 喜欢</span></div><SpeechPlayer :title="current.title" :text="'以下为未独立核验的原文快讯。'+current.excerpt"/><InfoGallery :title="current.title" :points="[current.excerpt]" :source="current.source_name+'。'+current.canonical_url"/><LinkAttachments :link-id="current.id"/><p class="brief-stream-source">{{current.source_name}} · 采集 {{dateLabel(current.observed_at)}}<br/>{{current.source_published_at?'原文 '+dateLabel(current.source_published_at):'原文日期未确定，非今日发布声明'}}</p><p class="form-hint">原文资料，尚未生成中文解读、未独立核验。信息图不是新闻照片。</p></div><div class="brief-stream-actions"><a v-if="secureUrl(current.canonical_url)" :href="current.canonical_url" target="_blank" rel="noopener noreferrer" class="btn primary small">阅读原文<Icon name="ExternalLink" :size="14"/></a><RouterLink :to="{path:'/publish',query:{link:current.id}}" class="btn outline small">写笔记</RouterLink><button class="icon-btn" aria-label="上一条快讯" :disabled="index===0" @click="move(-1)"><Icon name="ArrowUp"/></button><button class="icon-btn" aria-label="下一条快讯" :disabled="index>=rows.length-1" @click="move(1)"><Icon name="ArrowDown"/></button></div></article><div v-else class="empty-state"><Icon name="Rss" :size="36"/><h2>{{busy?'正在获取最新快讯':'暂无快讯'}}</h2><p>启用来源后由云端采集；没有资料时不会编造新闻。</p><RouterLink to="/inbox?tab=briefs" class="btn outline">管理采集来源</RouterLink></div></section></template>
