@@ -75,3 +75,5 @@
 
 - V0.02 最终本地检查：22 项 Vitest/PostgreSQL、21 项 Deno API/worker、11 项 Python（.venv）通过，30 项 Playwright 通过；类型检查、Edge 检查、生产构建与静态产物检查通过。
 - 安全顾问：新增私有 OAuth 表启用 RLS 且无前端策略是有意拒绝访问，相关 RPC 只授予 service_role；is_owner 的 authenticated SECURITY DEFINER 调用为身份判定所必需。现有 Auth 泄露密码保护未开启，需在控制台按实际套餐与配置评估，不代表本次已启用该功能。
+
+- 补充规范网址跳转验证：只跟随已批准域名内的 HTTPS 跳转，每一跳重新检查域名和地址，最多 4 跳；外域及私网跳转拒绝。元信息缺日期或简介时保留已知 RSS 日期与摘要。Deno API/worker 最终 23 项通过。

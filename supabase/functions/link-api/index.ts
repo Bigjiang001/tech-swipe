@@ -70,7 +70,7 @@ Deno.serve(handler('POST',async(req,raw)=>{
  try{
   const page=await safeFetch(row.canonical_url,[host],750000);if(!page.contentType.includes('text/html'))throw new ApiError(422,'html_page_required')
   const metadata=htmlMetadata(page.body);if(!metadata.title)throw new ApiError(422,'page_metadata_missing')
-  checked(await db.from('link_items').update({...metadata,title:row.title||metadata.title,metadata:{...metadata.metadata,original_title:metadata.title},source_id:source.id,source_name:source.name,stage:row.post_id?'drafted':'extracted',processing_until:null,error_code:null,updated_at:new Date().toISOString()}).eq('id',row.id).eq('stage','processing'))
+  checked(await db.from('link_items').update({...metadata,source_published_at:metadata.source_published_at||row.source_published_at,excerpt:metadata.excerpt||row.excerpt,title:row.title||metadata.title,metadata:{...metadata.metadata,original_title:metadata.title},source_id:source.id,source_name:source.name,stage:row.post_id?'drafted':'extracted',processing_until:null,error_code:null,updated_at:new Date().toISOString()}).eq('id',row.id).eq('stage','processing'))
   return {ok:true,stage:'extracted',message:'已提取网页元信息；未生成中文解读，候选图片未导入'}
  }catch(e){const code=e instanceof ApiError?e.code:'metadata_fetch_failed';checked(await db.from('link_items').update({stage:'failed',processing_until:null,error_code:code,updated_at:new Date().toISOString()}).eq('id',row.id).eq('stage','processing'));return {ok:false,error:code}}
 }))

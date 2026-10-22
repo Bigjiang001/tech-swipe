@@ -1,0 +1,7 @@
+Deno.env.set('SUPABASE_URL','https://database.example.test')
+Deno.env.set('SUPABASE_SERVICE_ROLE_KEY','test-service-key')
+const {safeFetch}=await import('../functions/_shared/network.ts')
+const dns=Deno.resolveDns,fetchOriginal=globalThis.fetch
+function assert(v:unknown){if(!v)throw new Error('Network boundary assertion failed')}
+Deno.test('same-host canonical redirects work and revalidate every hop',async()=>{let calls=0;Deno.resolveDns=(async()=>['93.184.216.34']) as any;globalThis.fetch=(async()=>++calls===1?new Response(null,{status:301,headers:{location:'/article/'}}):new Response('<title>Source</title>')) as typeof fetch;try{assert((await safeFetch('https://example.com/article',['example.com'])).body.includes('Source'));assert(calls===2)}finally{Deno.resolveDns=dns;globalThis.fetch=fetchOriginal}})
+Deno.test('redirect cannot escape approved host or reach private DNS',async()=>{Deno.resolveDns=(async()=>['93.184.216.34']) as any;globalThis.fetch=(async()=>new Response(null,{status:302,headers:{location:'https://attacker.example/steal'}})) as typeof fetch;let denied=false;try{await safeFetch('https://example.com/a',['example.com'])}catch{denied=true}finally{Deno.resolveDns=dns;globalThis.fetch=fetchOriginal}assert(denied);Deno.resolveDns=(async()=>['127.0.0.1']) as any;denied=false;try{await safeFetch('https://example.com/a',['example.com'])}catch{denied=true}finally{Deno.resolveDns=dns}assert(denied)})
